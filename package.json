@@ -1,26 +1,19 @@
 {
   "name": "devoilement_theme",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/tkstan/devoilement_theme.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/tkstan/devoilement_theme/issues"
-  },
-  "homepage": "https://github.com/tkstan/devoilement_theme#readme",
-  "description": "",
   "dependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "vite": "^6.2.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scratchcard-v2": "^1.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.0.0"
   }
 }
