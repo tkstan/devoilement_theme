@@ -1,37 +1,171 @@
-import React, { useRef, useState } from "react";
-import ScratchCard from "react-scratchcard-v2";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import devoilements from "./devoilements";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./components/ui/card";
+import ScratchSurface from "./components/ScratchSurface";
 
 const App = () => {
-  const imageUrl = "/assets/reveal-image.jpg"; // Image à découvrir
-  const scratchImageUrl = "/assets/scratch-image.jpg"; // Image blanche à gratter
-  const [revealed, setRevealed] = useState(false);
   const scratchCardRef = useRef(null);
+  const [selectedId, setSelectedId] = useState(() => devoilements[0]?.id ?? null);
+  const [isRevealed, setIsRevealed] = useState(false);
 
-  const settings = {
-    width: 430,
-    height: 932,
-    image: scratchImageUrl, // Image blanche qui cache
-    brushSize: 30,
-    finishPercent: 50,
-    onComplete: () => setRevealed(true),
+  const selectedReveal = useMemo(
+    () => devoilements.find((item) => item.id === selectedId) ?? null,
+    [selectedId]
+  );
+
+  useEffect(() => {
+    if (!selectedReveal) {
+      return;
+    }
+    setIsRevealed(false);
+    if (scratchCardRef.current && typeof scratchCardRef.current.reset === "function") {
+      scratchCardRef.current.reset();
+    }
+  }, [selectedReveal]);
+
+  if (!selectedReveal) {
+    return (
+      <div className="app app--empty">
+        <div className="app__overlay">
+          <p className="app__empty-message">
+            Aucun dévoilement disponible pour le moment. Ajoutez un nouveau dossier dans
+            <code>src/devoilements</code> pour commencer.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const {
+    announcement,
+    theme,
+    subtitle,
+    title,
+    scratchSettings,
+    timeline,
+    resources,
+    background,
+  } = selectedReveal;
+
+  const backgroundStyle =
+    background ??
+    "radial-gradient(circle at 20% 20%, rgba(59,130,246,0.35), rgba(15,23,42,0.95) 65%)";
+
+  const handleResetScratch = () => {
+    if (scratchCardRef.current && typeof scratchCardRef.current.reset === "function") {
+      scratchCardRef.current.reset();
+    }
+    setIsRevealed(false);
   };
 
   return (
-    <div
-      className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 relative w-full h-full"
-      style={{ backgroundImage: `url(${imageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
-    >
-      <h1 className="text-xl font-bold mb-4 text-center relative z-30">Dévoilement du Thème</h1>
-      <Card className="w-[430px] h-[932px] relative overflow-hidden rounded-xl shadow-lg z-20">
-        <CardContent className="flex flex-col items-center relative w-full h-full p-0">
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-3xl font-bold text-black bg-white bg-opacity-75 px-4 py-2 rounded-lg z-30">
-            Grattez ici
-          </div>
-          <ScratchCard ref={scratchCardRef} {...settings} className="absolute top-0 left-0 w-full h-full z-20" />
-        </CardContent>
-      </Card>
-      {revealed && <p className="mt-2 text-lg text-green-600 text-center relative z-30">Thème dévoilé !</p>}
+    <div className="app" style={{ background: backgroundStyle }}>
+      <div className="app__overlay">
+        <aside className="app__sidebar">
+          <h1 className="app__title">Dévoilements successifs</h1>
+          <p className="app__subtitle">
+            Explorez chaque édition et grattez la carte pour révéler le thème correspondant.
+          </p>
+          <ul className="app__list">
+            {devoilements.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className={`app__list-button${item.id === selectedReveal.id ? " app__list-button--active" : ""}`}
+                  onClick={() => setSelectedId(item.id)}
+                >
+                  <span className="app__list-title">{item.title}</span>
+                  <span className="app__list-theme">{item.theme}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </aside>
+        <main className="app__main">
+          <Card className="scratch-card">
+            <CardHeader>
+              <CardTitle>{title}</CardTitle>
+              <CardDescription>{subtitle}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                className="scratch-card__stage"
+                style={{
+                  width: `${scratchSettings.width}px`,
+                  height: `${scratchSettings.height}px`,
+                }}
+              >
+                <div className="scratch-card__reveal">
+                  <span className="scratch-card__eyebrow">{theme}</span>
+                  <h3 className="scratch-card__headline">{announcement.headline}</h3>
+                  <p className="scratch-card__message">{announcement.message}</p>
+                  <ul className="scratch-card__highlights">
+                    {announcement.highlights.map((highlight) => (
+                      <li key={highlight}>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+                <ScratchSurface
+                  ref={scratchCardRef}
+                  width={scratchSettings.width}
+                  height={scratchSettings.height}
+                  brushSize={scratchSettings.brushSize}
+                  finishPercent={scratchSettings.finishPercent}
+                  coverImage={scratchSettings.coverImage}
+                  coverColor={scratchSettings.coverColor}
+                  onComplete={() => setIsRevealed(true)}
+                  className="scratch-card__mask"
+                />
+                {!isRevealed && (
+                  <div className="scratch-card__hint">
+                    <span>Grattez pour dévoiler le thème</span>
+                  </div>
+                )}
+              </div>
+              <section className="scratch-card__section">
+                <h4>Moments clés de l'édition</h4>
+                <ul className="scratch-card__timeline">
+                  {timeline.map((step) => (
+                    <li key={step.label}>
+                      <span className="scratch-card__timeline-label">{step.label}</span>
+                      <p className="scratch-card__timeline-description">{step.description}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </CardContent>
+            <CardFooter>
+              <div className="scratch-card__footer">
+                <div className="scratch-card__resources">
+                  <h4>Ressources utiles</h4>
+                  <ul>
+                    {resources.map((resource) => (
+                      <li key={resource.href}>
+                        <a href={resource.href} target="_blank" rel="noreferrer">
+                          {resource.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="scratch-card__actions">
+                  <button type="button" className="button" onClick={handleResetScratch}>
+                    Réinitialiser la carte
+                  </button>
+                  {isRevealed && <span className="badge">Thème dévoilé</span>}
+                </div>
+              </div>
+            </CardFooter>
+          </Card>
+        </main>
+      </div>
     </div>
   );
 };
